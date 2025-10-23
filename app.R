@@ -1,6 +1,5 @@
-# app.R
 # --------------------------------------------
-# Shiny Plotter: upload data -> explore -> plot -> stats
+# upload data -> explore -> plot -> stats
 # --------------------------------------------
 
 # Packages
@@ -12,7 +11,7 @@ library(readxl)
 library(dplyr)
 library(stringr)
 library(tidyr)
-library(tools)    # file_ext
+library(tools) 
 suppressWarnings({ has_ggpubr <- requireNamespace("ggpubr", quietly = TRUE) })
 suppressWarnings({ has_viridis <- requireNamespace("viridis", quietly = TRUE) })
 
@@ -93,7 +92,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  # ---- Helpers ----
+  #  Helpers
   .theme_map <- list(
     minimal = theme_minimal,
     classic = theme_classic,
@@ -112,7 +111,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # Reactive: read data
+  # Reactive read data
   raw_data <- reactive({
     req(input$file)
     path <- input$file$datapath
@@ -185,7 +184,7 @@ server <- function(input, output, session) {
     })
   }, ignoreInit = FALSE)
   
-  # Build plot
+  #  plot
   build_plot <- reactive({
     req(raw_data(), input$plot_type, input$xvar)
     df <- raw_data()
@@ -208,9 +207,8 @@ server <- function(input, output, session) {
     colour_scale <- NULL
     fill_scale <- NULL
     
-    # Color handling
+    # Colors
     if (input$colour_mode == "by_col" && isTruthy(input$colour_var)) {
-      # use colour aesthetic for scatter/line; fill for violin/box/bar
       if (input$plot_type %in% c("violin","box","bar")) {
         aes_map$fill <- as.name(input$colour_var)
       } else {
@@ -226,7 +224,6 @@ server <- function(input, output, session) {
         else colour_scale <- scale_color_manual(values = cols)
       }
     } else if (input$colour_mode == "manual" && nzchar(input$manual_cols)) {
-      # Single colour fallback if no column selected
       cols <- str_trim(unlist(str_split(input$manual_cols, ",")))
       if (length(cols) >= 1) {
         if (input$plot_type %in% c("violin","box","bar")) {
@@ -295,11 +292,11 @@ server <- function(input, output, session) {
       g <- g + ggpubr::stat_compare_means(mapping = aes(group = .data[[input$group_var]]), label = "p.format")
     }
     
-    # Apply scales
+    # scales
     if (!is.null(colour_scale)) g <- g + colour_scale
     if (!is.null(fill_scale))   g <- g + fill_scale
     
-    # Labels & theme
+    # Labels and theme
     g <- g + labs(x = input$xvar, y = if (isTruthy(input$yvar)) input$yvar else NULL) + thm
     g
   })
@@ -318,7 +315,6 @@ server <- function(input, output, session) {
   )
 }
 
-# Shiny helper for %||%
 `%||%` <- function(a,b) if (!is.null(a)) a else b
 
 shinyApp(ui, server)
